@@ -22,7 +22,7 @@ ESTADISTICAS_ENEMIGOS = {
         "velocidad": 1.2,
         "dano": 5,
         "xp": 3,
-        "oro": 2
+        "oro": 3
     },
     "medusa": {
         "sprite": "enemigos/medusa.png",
@@ -30,7 +30,7 @@ ESTADISTICAS_ENEMIGOS = {
         "velocidad": 2.0,
         "dano": 3,
         "xp": 1,
-        "oro": 2
+        "oro": 3
     }
 }
 # =====================================================
@@ -39,18 +39,18 @@ ESTADISTICAS_ENEMIGOS = {
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.fondo = arcade.load_texture("fondos/menu.jpeg")
+        self.fondo = arcade.load_texture("fondos/menu.png")
         self.boton_jugar = (ANCHO//2, 350, 250, 60)
 
     def on_draw(self):
         self.clear()
         arcade.draw_texture_rectangle(ANCHO//2, ALTO//2, ANCHO, ALTO, self.fondo)
-        arcade.draw_text("MI JUEGO", ANCHO//2 - 140, 580, arcade.color.WHITE, 50)
+        arcade.draw_text("La defensa de marte", ANCHO//3.1 - 140, 580, arcade.color.WHITE, 40)
 
         x,y,w,h = self.boton_jugar
         arcade.draw_rectangle_filled(x,y,w,h, arcade.color.DARK_GREEN)
         arcade.draw_text("JUGAR", x-55, y-15, arcade.color.WHITE, 20)
-        
+        arcade.draw_text("JUGAR", x-55, y-5, arcade.color.WHITE, 20)
 
     def on_mouse_press(self, x, y, button, modifiers):
         bx, by, bw, bh = self.boton_jugar
@@ -151,6 +151,7 @@ class GameOverView(arcade.View):
     def __init__(self, juego):
         super().__init__()
         self.juego = juego
+        self.fondo = arcade.load_texture("fondos/perdimos.png")
 
         self.record = self.cargar_record(juego.puntos)
         self.guardar_record()
@@ -167,11 +168,20 @@ class GameOverView(arcade.View):
         open(RECORD_FILE, "w").write(str(self.record))
 
     def on_draw(self):
-        self.clear()
-        arcade.draw_text("GAME OVER", 260, 600, arcade.color.RED, 50)
-        arcade.draw_text(f"Puntos: {self.juego.puntos}", 260, 500, arcade.color.WHITE, 25)
-        arcade.draw_text(f"Récord: {self.record}", 260, 460, arcade.color.YELLOW, 25)
-        arcade.draw_text("ENTER para regresar al menú", 200, 350, arcade.color.WHITE, 20)
+        arcade.start_render()
+
+        # 🌆 DIBUJAR EL FONDO
+        arcade.draw_lrwh_rectangle_textured(
+            0, 0,
+            self.window.width,
+            self.window.height,
+            self.fondo
+        )
+
+        arcade.draw_text("GAME OVER", 260, 550, arcade.color.WHITE, 25)
+        arcade.draw_text(f"Puntos: {self.juego.puntos}", 260, 450, arcade.color.WHITE, 25)
+        arcade.draw_text(f"Récord: {self.record}", 260, 350, arcade.color.YELLOW, 25)
+        arcade.draw_text("ENTER para regresar al menú", 200, 200, arcade.color.WHITE, 20)
         
     def on_key_press(self, symbol, modifiers):
         if symbol == arcade.key.ENTER:
@@ -244,7 +254,8 @@ class Juego(arcade.View):
             for _ in range(cantidad):
                 tipo = random.choice(tipos)
                 self.spawn_enemigo(tipo, mult)
-
+            if self.wave_manager.oleada_actual !=1:
+                self.jugador.balas+=5
             self.wave_manager.enemigos_vivos = cantidad
             self.wave_manager.oleada_actual += 1
 
@@ -325,6 +336,7 @@ class TiendaView(arcade.View):
         super().__init__()
         self.juego = juego
         self.jugador = juego.jugador
+        
 
         self.opciones = [
             ("Recargar balas (+5)", 5),
@@ -336,9 +348,9 @@ class TiendaView(arcade.View):
         self.clear()
         arcade.draw_text("TIENDA", 300, 600, arcade.color.YELLOW, 50)
 
-        arcade.draw_text(f"oro: {self.jugador.monedas}",
-                         260, 540, arcade.color.WHITE, 20)
-
+        arcade.draw_text(f"oro: {self.jugador.monedas}",300, 540, arcade.color.WHITE, 20)
+        arcade.draw_text(f"Vida: {self.jugador.vida}",300, 510, arcade.color.WHITE, 20)
+       
         y = 450
         for i, (nombre, precio) in enumerate(self.opciones):
             arcade.draw_text(f"{i+1}. {nombre} — {precio} puntos", 150, y, arcade.color.WHITE, 20)
