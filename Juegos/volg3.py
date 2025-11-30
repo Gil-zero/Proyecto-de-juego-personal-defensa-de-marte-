@@ -3,6 +3,9 @@ import random
 import math
 import os
 
+# Cambiar al directorio del script
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 # --- Constantes ---
 ALTO, ANCHO = 800, 800
 TITULO = "Juego con sistema de oleadas"
@@ -25,7 +28,7 @@ ESTADISTICAS_ENEMIGOS = {
         "oro": 2
     },
     "medusa": {
-        "sprite": "enemigos/medusa.png",
+        "sprite": "enemigos/Medusa.png",
         "vida": 15,
         "velocidad": 2.0,
         "dano": 3,
@@ -44,11 +47,11 @@ class MenuView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.draw_texture_rectangle(ANCHO//2, ALTO//2, ANCHO, ALTO, self.fondo)
+        arcade.draw_texture_rect(self.fondo, arcade.LBWH(0, 0, ANCHO, ALTO))
         arcade.draw_text("MI JUEGO", ANCHO//2 - 140, 580, arcade.color.WHITE, 50)
 
         x,y,w,h = self.boton_jugar
-        arcade.draw_rectangle_filled(x,y,w,h, arcade.color.DARK_GREEN)
+        arcade.draw_rect_filled(arcade.XYWH(x, y, w, h), arcade.color.DARK_GREEN)
         arcade.draw_text("JUGAR", x-55, y-15, arcade.color.WHITE, 20)
         
 
@@ -78,7 +81,7 @@ class WaveManager:
 # =====================================================
 class Bala(arcade.Sprite):
     def __init__(self, x, y, objetivo_x, objetivo_y, dano=25):
-        super().__init__("proyectiles/bala1.png", 0.1)
+        super().__init__("Proyectiles/Bala1.png", 0.1)
         self.center_x = x
         self.center_y = y
         self.dano = dano
@@ -90,7 +93,7 @@ class Bala(arcade.Sprite):
         self.change_x = math.cos(ang) * VELOCIDAD_BALA
         self.change_y = math.sin(ang) * VELOCIDAD_BALA
 
-    def update(self):
+    def update(self, delta_time=0):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
@@ -198,7 +201,7 @@ class Enemigo(arcade.Sprite):
         self.change_x = random.choice([-1, 1]) * self.velocidad
         self.change_y = random.choice([-1, 1]) * self.velocidad
 
-    def update(self):
+    def update(self, delta_time=0):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
@@ -216,6 +219,8 @@ class Juego(arcade.View):
         super().__init__()
 
         self.jugador = Jugador()
+        self.jugador_list = arcade.SpriteList()
+        self.jugador_list.append(self.jugador)
         self.enemigos = arcade.SpriteList()
         self.balas = arcade.SpriteList()
         self.teclas = {}
@@ -244,17 +249,20 @@ class Juego(arcade.View):
             for _ in range(cantidad):
                 tipo = random.choice(tipos)
                 self.spawn_enemigo(tipo, mult)
-
+            if self.wave_manager.oleada_actual!=1:
+                self.jugador.balas+=5
             self.wave_manager.enemigos_vivos = cantidad
             self.wave_manager.oleada_actual += 1
+            
+
 
     # =====================================================
     # EVENTOS
     # =====================================================
     def on_draw(self):
         self.clear()
-        arcade.draw_texture_rectangle(ANCHO//2, ALTO//2, ANCHO, ALTO, self.fondo)
-        self.jugador.draw()
+        arcade.draw_texture_rect(self.fondo, arcade.LBWH(0, 0, ANCHO, ALTO))
+        self.jugador_list.draw()
         self.enemigos.draw()
         self.balas.draw()
 
