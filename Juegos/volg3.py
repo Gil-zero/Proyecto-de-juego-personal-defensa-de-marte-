@@ -49,7 +49,7 @@ class MenuView(arcade.View):
 
         x,y,w,h = self.boton_jugar
         arcade.draw_rectangle_filled(x,y,w,h, arcade.color.DARK_GREEN)
-        arcade.draw_text("JUGAR", x-55, y-15, arcade.color.WHITE, 20)
+        
         arcade.draw_text("JUGAR", x-55, y-5, arcade.color.WHITE, 20)
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -152,7 +152,7 @@ class GameOverView(arcade.View):
         super().__init__()
         self.juego = juego
         self.fondo = arcade.load_texture("fondos/perdimos.png")
-
+        self.boton_jugar = (ANCHO//2, 300, 200, 60)
         self.record = self.cargar_record(juego.puntos)
         self.guardar_record()
 
@@ -177,16 +177,23 @@ class GameOverView(arcade.View):
             self.window.height,
             self.fondo
         )
-
+        x,y,w,h = self.boton_jugar
+        arcade.draw_rectangle_filled(x,y,w,h, arcade.color.DARK_GREEN)
+        arcade.draw_text("JUGAR", x-55, y-10, arcade.color.WHITE, 20)
         arcade.draw_text("GAME OVER", 260, 550, arcade.color.WHITE, 25)
         arcade.draw_text(f"Puntos: {self.juego.puntos}", 260, 450, arcade.color.WHITE, 25)
         arcade.draw_text(f"Récord: {self.record}", 260, 350, arcade.color.YELLOW, 25)
         arcade.draw_text("ENTER para regresar al menú", 200, 200, arcade.color.WHITE, 20)
         
     def on_key_press(self, symbol, modifiers):
+        bx, by, bw, bh = self.boton_jugar
         if symbol == arcade.key.ENTER:
             self.window.show_view(MenuView())
-
+            
+    def on_mouse_press(self, x, y, button, modifiers):
+        bx, by, bw, bh = self.boton_jugar
+        if abs(x-bx) < bw/2 and abs(y-by) < bh/2:
+            self.window.show_view(Juego())
 
 # =====================================================
 # ENEMIGO
