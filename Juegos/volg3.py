@@ -25,7 +25,7 @@ ESTADISTICAS_ENEMIGOS = {
         "velocidad": 1.2,
         "dano": 5,
         "xp": 3,
-        "oro": 2
+        "oro": 3
     },
     "medusa": {
         "sprite": "enemigos/Medusa.png",
@@ -33,7 +33,15 @@ ESTADISTICAS_ENEMIGOS = {
         "velocidad": 2.0,
         "dano": 3,
         "xp": 1,
-        "oro": 2
+        "oro": 3
+    },
+    "drone":{
+        "sprite": "enemigos/Medusa.png",
+        "vida": 10,
+        "velocidad": 1.5,
+        "dano": 6,
+        "xp": 1,
+        "oro": 4
     }
 }
 # =====================================================
@@ -42,7 +50,7 @@ ESTADISTICAS_ENEMIGOS = {
 class MenuView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.fondo = arcade.load_texture("fondos/menu.jpeg")
+        self.fondo = arcade.load_texture("fondos/menu.png")
         self.boton_jugar = (ANCHO//2, 350, 250, 60)
 
     def on_draw(self):
@@ -52,7 +60,7 @@ class MenuView(arcade.View):
 
         x,y,w,h = self.boton_jugar
         arcade.draw_rect_filled(arcade.XYWH(x, y, w, h), arcade.color.DARK_GREEN)
-        arcade.draw_text("JUGAR", x-55, y-15, arcade.color.WHITE, 20)
+        arcade.draw_text("JUGAR", x-55, y-5, arcade.color.WHITE, 20)
         
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -67,10 +75,9 @@ class WaveManager:
     def __init__(self):
         self.oleada_actual = 1
         self.enemigos_vivos = 0
-
         self.oleadas = {
             1: {"cantidad": 3, "tipos": ["malo"]},
-            2: {"cantidad": 5, "tipos": ["malo", "medusa"]},
+            2: {"cantidad": 5, "tipos": ["malo", "medusa","drone"]},
         }
 
     def obtener_oleada(self):
@@ -154,7 +161,7 @@ class GameOverView(arcade.View):
     def __init__(self, juego):
         super().__init__()
         self.juego = juego
-
+        self.fondo = arcade.load_texture("fondos/perdimos.png")
         self.record = self.cargar_record(juego.puntos)
         self.guardar_record()
 
@@ -171,6 +178,7 @@ class GameOverView(arcade.View):
 
     def on_draw(self):
         self.clear()
+        arcade.draw_texture_rect(self.fondo, arcade.LBWH(0, 0, ANCHO, ALTO))
         arcade.draw_text("GAME OVER", 260, 600, arcade.color.RED, 50)
         arcade.draw_text(f"Puntos: {self.juego.puntos}", 260, 500, arcade.color.WHITE, 25)
         arcade.draw_text(f"Récord: {self.record}", 260, 460, arcade.color.YELLOW, 25)
@@ -210,6 +218,20 @@ class Enemigo(arcade.Sprite):
         if not (20 < self.center_y < ALTO-20):
             self.change_y *= -1
 
+class EnemigoPerseguidor(Enemigo):
+    def __init__(self,jugador,mult=1.0):
+      super().__init__("drone",mult)
+      self.jugador=jugador
+
+    def update(self,delta_time=0):
+        dx = self.jugador.center_x - self.center_x
+        dy = self.jugador.center_y - self.center_y
+        distancia = math.sqrt(dx**2 + dy**2)
+        if distancia > 0:
+            self.change_x = (dx / distancia) * self.velocidad
+            self.change_y = (dy / distancia) * self.velocidad
+        self.center_x += self.change_x
+        self.center_y += self.change_y
 
 # =====================================================
 # JUEGO PRINCIPAL
@@ -235,7 +257,10 @@ class Juego(arcade.View):
         self.manejar_oleadas()
 
     def spawn_enemigo(self, tipo, mult):
-        enemigo = Enemigo(tipo, mult)
+        if tipo=="drone":
+            enemigo=EnemigoPerseguidor(self.jugador,mult)
+        else:
+            enemigo = Enemigo(tipo, mult)
         self.enemigos.append(enemigo)
 
     def manejar_oleadas(self):
