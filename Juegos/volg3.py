@@ -297,7 +297,7 @@ class Juego(arcade.View):
         self.balas = arcade.SpriteList()
         self.bolas_fuego = arcade.SpriteList() 
         self.teclas = {}
-        self.fondo = arcade.load_texture("fondos/escenario.png")
+        self.fondo = arcade.load_texture("fondos/fondo2.png")
 
         self.puntos = 0
 
