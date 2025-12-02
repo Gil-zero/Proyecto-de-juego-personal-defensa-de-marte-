@@ -12,6 +12,7 @@ TITULO = "Juego con sistema de oleadas"
 
 VELOCIDAD_JUGADOR = 4
 VELOCIDAD_BALA = 15
+VELOCIDAD_BOLA_FUEGO=5
 RECORD_FILE = "record.txt"
 
 # =====================================================
@@ -28,7 +29,7 @@ ESTADISTICAS_ENEMIGOS = {
         "oro": 3
     },
     "medusa": {
-        "sprite": "enemigos/Medusa.png",
+        "sprite": "enemigos/Corredor.png",
         "vida": 15,
         "velocidad": 2.0,
         "dano": 3,
@@ -36,12 +37,20 @@ ESTADISTICAS_ENEMIGOS = {
         "oro": 3
     },
     "drone":{
-        "sprite": "enemigos/Medusa.png",
+        "sprite": "enemigos/Drone.png",
         "vida": 10,
         "velocidad": 1.5,
         "dano": 6,
         "xp": 1,
         "oro": 4
+    },
+    "mago":{
+        "sprite":"enemigos/Mago.png",
+        "vida":10,
+        "velocidad":0,
+        "dano":0,
+        "xp":1,
+        "oro":4
     }
 }
 # =====================================================
@@ -77,7 +86,7 @@ class WaveManager:
         self.enemigos_vivos = 0
         self.oleadas = {
             1: {"cantidad": 3, "tipos": ["malo"]},
-            2: {"cantidad": 5, "tipos": ["malo", "medusa","drone"]},
+            2: {"cantidad": 5, "tipos": ["malo", "medusa","drone","mago"]},
         }
 
     def obtener_oleada(self):
@@ -106,7 +115,25 @@ class Bala(arcade.Sprite):
 
         if not (0 < self.center_x < ANCHO and 0 < self.center_y < ALTO):
             self.kill()
+class BolaDeFuego(arcade.Sprite):
+    def __init__(self, x, y, objetivo_x, objetivo_y, dano=25):
+        super().__init__("PRoyectiles/BolaDeFuego.png",0.2)
+        self.center_x = x
+        self.center_y = y
+        self.dano = dano
 
+        dx = objetivo_x - x
+        dy = objetivo_y - y
+        ang = math.atan2(dy, dx)
+
+        self.change_x = math.cos(ang) * VELOCIDAD_BOLA_FUEGO
+        self.change_y = math.sin(ang) * VELOCIDAD_BOLA_FUEGO
+    def update(self, delta_time=0):
+        self.center_x += self.change_x
+        self.center_y += self.change_y
+
+        if not (0 < self.center_x < ANCHO and 0 < self.center_y < ALTO):
+            self.kill()
 
 # =====================================================
 # JUGADOR
@@ -195,7 +222,7 @@ class GameOverView(arcade.View):
 class Enemigo(arcade.Sprite):
     def __init__(self, tipo, mult=1.0):
         stats = ESTADISTICAS_ENEMIGOS[tipo]
-        super().__init__(stats["sprite"], 1)
+        super().__init__(stats["sprite"], 0.1)
 
         self.tipo = tipo
         self.vida = int(stats["vida"] * mult)
@@ -233,6 +260,28 @@ class EnemigoPerseguidor(Enemigo):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
+class EnemigoTirador(Enemigo):
+    def __init__(self, jugador,bolas_fuego_list, mult=1):
+        super().__init__("mago", mult)
+        self.jugador=jugador
+        self.bolas_fuego_list = bolas_fuego_list
+        self.bolas=arcade.SpriteList()
+        self.tiempo_acumulado=0
+        self.intervalo_disparo=2
+    
+    def update(self,delta_time=0):
+        super().update(delta_time)
+        self.tiempo_acumulado+=delta_time
+        if self.tiempo_acumulado>=self.intervalo_disparo:
+            bola = BolaDeFuego(
+                self.center_x, 
+                self.center_y,
+                self.jugador.center_x, 
+                self.jugador.center_y, 
+                20
+            )
+            self.bolas_fuego_list.append(bola) 
+            self.tiempo_acumulado=0
 # =====================================================
 # JUEGO PRINCIPAL
 # =====================================================
@@ -245,6 +294,7 @@ class Juego(arcade.View):
         self.jugador_list.append(self.jugador)
         self.enemigos = arcade.SpriteList()
         self.balas = arcade.SpriteList()
+        self.bolas_fuego = arcade.SpriteList() 
         self.teclas = {}
         self.fondo = arcade.load_texture("fondos/escenario.png")
 
@@ -259,6 +309,8 @@ class Juego(arcade.View):
     def spawn_enemigo(self, tipo, mult):
         if tipo=="drone":
             enemigo=EnemigoPerseguidor(self.jugador,mult)
+        elif tipo=="mago":
+            enemigo=EnemigoTirador(self.jugador,self.bolas_fuego,mult)
         else:
             enemigo = Enemigo(tipo, mult)
         self.enemigos.append(enemigo)
@@ -290,6 +342,7 @@ class Juego(arcade.View):
         self.jugador_list.draw()
         self.enemigos.draw()
         self.balas.draw()
+        self.bolas_fuego.draw()
 
         arcade.draw_text(f"Vida: {self.jugador.vida}", 10, ALTO-30, arcade.color.WHITE, 14)
         arcade.draw_text(f"Oro: {self.jugador.monedas}", 10, ALTO-60, arcade.color.YELLOW, 16)
@@ -323,6 +376,7 @@ class Juego(arcade.View):
         self.jugador.mover(self.teclas)
         self.enemigos.update()
         self.balas.update()
+        self.bolas_fuego.update()
 
         # Balas → enemigos
         for bala in self.balas:
@@ -337,6 +391,10 @@ class Juego(arcade.View):
                         self.puntos += enemigo.xp
                         # ORO
                         self.jugador.monedas += ESTADISTICAS_ENEMIGOS[enemigo.tipo]["oro"]
+
+        for bola in arcade.check_for_collision_with_list(self.jugador, self.bolas_fuego):
+            self.jugador.vida -= bola.dano
+            bola.kill()
 
         # Enemigos → jugador
         for enemigo in arcade.check_for_collision_with_list(self.jugador, self.enemigos):
