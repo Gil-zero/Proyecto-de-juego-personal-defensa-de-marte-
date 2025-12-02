@@ -472,7 +472,7 @@ class TiendaView(arcade.View):
         super().__init__()
         self.juego = juego
         self.jugador = juego.jugador
-
+        self.fondo = arcade.load_texture("fondos/Tienda.jpeg")
         self.opciones = [
             ("Recargar balas (+5)", 5),
             ("Curar (+20 vida)", 10),
@@ -481,10 +481,11 @@ class TiendaView(arcade.View):
 
     def on_draw(self):
         self.clear()
+        arcade.draw_texture_rect(self.fondo, arcade.LBWH(0, 0, ANCHO, ALTO))
         arcade.draw_text("TIENDA", 300, 600, arcade.color.YELLOW, 50)
 
         arcade.draw_text(f"oro: {self.jugador.monedas}",
-                         260, 540, arcade.color.WHITE, 20)
+                         150, 540, arcade.color.WHITE, 20)
 
         y = 450
         for i, (nombre, precio) in enumerate(self.opciones):
@@ -519,6 +520,8 @@ class TiendaView(arcade.View):
                 self.juego.jugador.balas += 5
             elif index == 1:   # curar
                 self.juego.jugador.vida = min(100, self.juego.jugador.vida + 20)
+                if self.juego.jugador.vida==self.juego.jugador.vida_max:
+                    self.juego.jugador.monedas+=10
             elif index == 2:   # daño
                 self.juego.jugador.dano += 5
         else:
