@@ -221,7 +221,7 @@ class GameOverView(arcade.View):
 # ENEMIGO
 # =====================================================
 class Enemigo(arcade.Sprite):
-    def __init__(self, tipo, mult=1.0):
+    def __init__(self, tipo, mult=1.0,jugador_pos=None):
         stats = ESTADISTICAS_ENEMIGOS[tipo]
         super().__init__(stats["sprite"], 0.1)
 
@@ -231,12 +231,25 @@ class Enemigo(arcade.Sprite):
         self.dano = stats["dano"]
         self.xp = stats["xp"]
 
-        self.center_x = random.randint(40, ANCHO-40)
-        self.center_y = random.randint(40, ALTO-40)
+        if jugador_pos:
+            while True:
+                self.center_x = random.randint(40, ANCHO-40)
+                self.center_y = random.randint(40, ALTO-40)
+                
+                # Calcular distancia al jugador
+                dx = self.center_x - jugador_pos[0]
+                dy = self.center_y - jugador_pos[1]
+                distancia = math.sqrt(dx**2 + dy**2)
+                
+                # Si está a más de 50 píxeles, usar esta posición
+                if distancia >= 50:
+                    break
+        else:
+            self.center_x = random.randint(40, ANCHO-40)
+            self.center_y = random.randint(40, ALTO-40)
 
         self.change_x = random.choice([-1, 1]) * self.velocidad
         self.change_y = random.choice([-1, 1]) * self.velocidad
-
     def update(self, delta_time=0):
         self.center_x += self.change_x
         self.center_y += self.change_y
@@ -248,7 +261,7 @@ class Enemigo(arcade.Sprite):
 
 class EnemigoPerseguidor(Enemigo):
     def __init__(self,jugador,mult=1.0):
-      super().__init__("drone",mult)
+      super().__init__("drone",mult,jugador_pos=(jugador.center_x, jugador.center_y))
       self.jugador=jugador
 
     def update(self,delta_time=0):
@@ -263,7 +276,7 @@ class EnemigoPerseguidor(Enemigo):
 
 class EnemigoTirador(Enemigo):
     def __init__(self, jugador,bolas_fuego_list, mult=1):
-        super().__init__("mago", mult)
+        super().__init__("mago", mult,jugador_pos=(jugador.center_x, jugador.center_y))
         self.jugador=jugador
         self.bolas_fuego_list = bolas_fuego_list
         self.bolas=arcade.SpriteList()
@@ -308,12 +321,14 @@ class Juego(arcade.View):
         self.manejar_oleadas()
 
     def spawn_enemigo(self, tipo, mult):
+        jugador_pos = (self.jugador.center_x, self.jugador.center_y)
+
         if tipo=="drone":
             enemigo=EnemigoPerseguidor(self.jugador,mult)
         elif tipo=="mago":
             enemigo=EnemigoTirador(self.jugador,self.bolas_fuego,mult)
         else:
-            enemigo = Enemigo(tipo, mult)
+            enemigo = Enemigo(tipo, mult,jugador_pos=jugador_pos)
         self.enemigos.append(enemigo)
 
     def manejar_oleadas(self):
@@ -475,7 +490,9 @@ class TiendaView(arcade.View):
         for i, (nombre, precio) in enumerate(self.opciones):
             arcade.draw_text(f"{i+1}. {nombre} — {precio} puntos", 150, y, arcade.color.WHITE, 20)
             y -= 60
-
+        arcade.draw_text(f"Vida:{self.jugador.vida}", 600, 600, arcade.color.GRAY, 18)
+        arcade.draw_text(f"Balas:{self.jugador.balas}", 600, 500, arcade.color.GRAY, 18)
+        arcade.draw_text(f"Daño:{self.jugador.dano}", 600, 550, arcade.color.GRAY, 18)
         arcade.draw_text("Presiona 1, 2 o 3 para comprar", 200, 200, arcade.color.GRAY, 18)
         arcade.draw_text("Presiona ESC para volver", 230, 160, arcade.color.GRAY, 18)
 
