@@ -7,7 +7,7 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # --- Constantes ---
-ALTO, ANCHO = 800, 800
+ALTO, ANCHO = 700, 700
 TITULO = "Juego con sistema de oleadas"
 
 VELOCIDAD_JUGADOR = 4
@@ -65,7 +65,7 @@ class MenuView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_texture_rect(self.fondo, arcade.LBWH(0, 0, ANCHO, ALTO))
-        arcade.draw_text("MI JUEGO", ANCHO//2 - 140, 580, arcade.color.WHITE, 50)
+        arcade.draw_text("Warhammer Survivor", ANCHO//2 - 300, 580, arcade.color.WHITE, 50)
 
         x,y,w,h = self.boton_jugar
         arcade.draw_rect_filled(arcade.XYWH(x, y, w, h), arcade.color.DARK_GREEN)
@@ -242,7 +242,7 @@ class Enemigo(arcade.Sprite):
                 distancia = math.sqrt(dx**2 + dy**2)
                 
                 # Si está a más de 50 píxeles, usar esta posición
-                if distancia >= 50:
+                if distancia >= 100:
                     break
         else:
             self.center_x = random.randint(40, ANCHO-40)
