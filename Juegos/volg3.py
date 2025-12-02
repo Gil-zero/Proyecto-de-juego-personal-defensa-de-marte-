@@ -337,7 +337,7 @@ class Juego(arcade.View):
             cantidad = datos["cantidad"]
             tipos = datos["tipos"]
 
-            mult = 1 + (self.wave_manager.oleada_actual * 0.05)
+            mult = 1 + (self.wave_manager.oleada_actual * 0.04)
 
             for _ in range(cantidad):
                 tipo = random.choice(tipos)
