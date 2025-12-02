@@ -7,12 +7,12 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # --- Constantes ---
-ALTO, ANCHO = 700, 700
+ALTO, ANCHO = 700, 1000
 TITULO = "Juego con sistema de oleadas"
 
 VELOCIDAD_JUGADOR = 4
 VELOCIDAD_BALA = 15
-VELOCIDAD_BOLA_FUEGO=5
+VELOCIDAD_BOLA_FUEGO=6
 RECORD_FILE = "record.txt"
 
 # =====================================================
@@ -47,7 +47,7 @@ ESTADISTICAS_ENEMIGOS = {
     "mago":{
         "sprite":"enemigos/Mago.png",
         "vida":10,
-        "velocidad":0,
+        "velocidad":0.5,
         "dano":0,
         "xp":1,
         "oro":4
@@ -476,7 +476,8 @@ class TiendaView(arcade.View):
         self.opciones = [
             ("Recargar balas (+5)", 5),
             ("Curar (+20 vida)", 10),
-            ("Aumentar daño (+5)", 20)
+            ("Aumentar daño (+5)", 20),
+            ("Aumentar Vida Maxima (+10)",25)
         ]
 
     def on_draw(self):
@@ -491,11 +492,12 @@ class TiendaView(arcade.View):
         for i, (nombre, precio) in enumerate(self.opciones):
             arcade.draw_text(f"{i+1}. {nombre} — {precio} puntos", 150, y, arcade.color.WHITE, 20)
             y -= 60
-        arcade.draw_text(f"Vida:{self.jugador.vida}", 600, 600, arcade.color.GRAY, 18)
-        arcade.draw_text(f"Balas:{self.jugador.balas}", 600, 500, arcade.color.GRAY, 18)
-        arcade.draw_text(f"Daño:{self.jugador.dano}", 600, 550, arcade.color.GRAY, 18)
-        arcade.draw_text("Presiona 1, 2 o 3 para comprar", 200, 200, arcade.color.GRAY, 18)
-        arcade.draw_text("Presiona ESC para volver", 230, 160, arcade.color.GRAY, 18)
+        arcade.draw_text(f"Vida:{self.jugador.vida}", 600, 600, arcade.color.YELLOW, 18)
+        arcade.draw_text(f"Balas:{self.jugador.balas}", 600, 500, arcade.color.YELLOW, 18)
+        arcade.draw_text(f"Daño:{self.jugador.dano}", 600, 550, arcade.color.YELLOW, 18)
+        arcade.draw_text(f"Vida Maxima:{self.jugador.vida_max}",600,450,arcade.color.YELLOW,18)
+        arcade.draw_text("Presiona 1, 2, 3 o 4 para comprar", 200, 200, arcade.color.WHITE, 18)
+        arcade.draw_text("Presiona ESC para volver", 230, 160, arcade.color.WHITE, 18)
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE:
@@ -508,6 +510,8 @@ class TiendaView(arcade.View):
             self.comprar(1)
         if key == arcade.key.KEY_3:
             self.comprar(2)
+        if key== arcade.key.KEY_4:
+            self.comprar(3)
 
     def comprar(self, index):
         nombre, precio = self.opciones[index]
@@ -519,11 +523,13 @@ class TiendaView(arcade.View):
             if index == 0:     # balas
                 self.juego.jugador.balas += 5
             elif index == 1:   # curar
-                self.juego.jugador.vida = min(100, self.juego.jugador.vida + 20)
+                self.juego.jugador.vida = min(self.juego.jugador.vida_max, self.juego.jugador.vida + 20)
                 if self.juego.jugador.vida==self.juego.jugador.vida_max:
                     self.juego.jugador.monedas+=10
             elif index == 2:   # daño
                 self.juego.jugador.dano += 5
+            elif index==3:
+                self.juego.jugador.vida_max+=10
         else:
             print("No tienes suficiente oro.")
 
