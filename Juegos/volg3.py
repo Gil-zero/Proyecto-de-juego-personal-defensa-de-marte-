@@ -145,6 +145,7 @@ class Jugador(arcade.Sprite):
         self.center_y = ALTO//2
 
         self.vida = 100
+        self.vida_max = 100
         self.balas = 10
         self.dano = 25
         self.monedas = 0
@@ -349,6 +350,46 @@ class Juego(arcade.View):
         arcade.draw_text(f"XP: {self.puntos}", 10, ALTO-150, arcade.color.LIGHT_GREEN, 16)
         arcade.draw_text(f"Oleada: {self.wave_manager.oleada_actual-1}", 10, ALTO-90, arcade.color.GREEN, 14)
         arcade.draw_text(f"Balas: {self.jugador.balas}", 10, ALTO-120, arcade.color.LIGHT_BLUE, 14)
+         # Barra de vida
+        bar_x = 10 # margen izquierdo
+        bar_y = self.height - 10 #margen superior
+
+        # Tamaño
+        bar_width = 200
+        bar_height = 20
+
+        # Fondo gris de la barra
+        arcade.draw_lrbt_rectangle_filled(
+            bar_x,
+            bar_x + bar_width,
+            bar_y - bar_height,
+            bar_y,
+            arcade.color.DARK_GRAY
+        )
+
+        # Calcular porcentaje de vida
+        pct = max(0, min(1, self.jugador.vida / self.jugador.vida_max))
+        current_width = bar_width * pct
+
+        # Barra roja (vida actual)
+        arcade.draw_lrbt_rectangle_filled(
+            bar_x,
+            bar_x + current_width,
+            bar_y - bar_height,
+            bar_y,
+            arcade.color.RED
+        )
+
+        # Contorno de la barra
+        arcade.draw_lrbt_rectangle_outline(
+            bar_x,
+            bar_x + bar_width,
+            bar_y - bar_height,
+            bar_y,
+            arcade.color.BLACK,
+            2
+        )
+        #arcade.draw_text(f"Vida: {self.jugador.vida}", 10, ALTO-30, arcade.color.WHITE, 14)
 
 
     def on_key_press(self, symbol, modifiers):
